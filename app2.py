@@ -37,33 +37,40 @@ def plot_voronoi(X, kmeans, added_points):
 
 
 # Set up the Streamlit app layout
-st.set_page_config(page_title='K Means Clustering')
-st.title('K Means Clustering App')
+# st.set_page_config(page_title='K Means Clustering')
+st.title('K Means Clustering')
 st.write("---")
 
 st.sidebar.write("Create random dataset")
-
-if st.session_state.get('X') is None:
-    # st.session_state.added_points = []
-    st.session_state.X, st.session_state.y = make_blobs(n_samples=100, centers=3, n_features=2, random_state=42)
-    st.session_state.kmeans = KMeans(n_clusters=3, random_state=42)
-    st.session_state.kmeans.fit(st.session_state.X)
-
 # Create a random dataset
 n_samples = st.sidebar.number_input('Number of samples', min_value=100, max_value=1000, value=200)
 n_centers = st.sidebar.number_input('Number of centers', min_value=1, max_value=20, value=3)
 
 # Streamlit app to add random data points and visualize the changing predictions
-st.title('KMeans Clustering')
 st.write('This app allows you to add random data points to an initial clustered dataset and visualize the changing predictions using a Voronoi diagram.')
-st.write('Initial dataset:')
+
+
+if st.session_state.get('X') is None:
+    st.session_state.n_samples = n_samples
+    st.session_state.n_centers = n_centers
+    st.session_state.X, st.session_state.y = make_blobs(n_samples=n_samples, centers=n_centers, n_features=2, random_state=42)
+    st.session_state.kmeans = KMeans(n_clusters=n_centers, random_state=42)
+    st.session_state.kmeans.fit(st.session_state.X)
+
+if st.session_state.n_samples != n_samples or st.session_state.n_centers != n_centers:
+    st.session_state.n_samples = n_samples
+    st.session_state.n_centers = n_centers
+    st.session_state.X, st.session_state.y = make_blobs(n_samples=n_samples, centers=n_centers, n_features=2, random_state=42)
+    st.session_state.kmeans = KMeans(n_clusters=n_centers, random_state=42)
+    st.session_state.kmeans.fit(st.session_state.X)
 
 n_points = st.sidebar.number_input('Number of points to add', min_value=0, max_value=100, value=15)
 added_points = []
 X = st.session_state.X
 kmeans = st.session_state.kmeans
 
-if n_points:
+st.button('Add data points')
+if st.button:
     for i in range(n_points):
         new_point = np.random.uniform(low=X.min(), high=X.max(), size=(1, 2))
         added_points.append(new_point)
@@ -72,11 +79,6 @@ if n_points:
     
     # Fit KMeans to the new dataset
     kmeans = KMeans(n_clusters=n_centers, random_state=42).fit(X)
-
-    st.write(f'Updated dataset after adding {n_points} random data point(s):')
-    st.write('---')
-    st.write('Voronoi diagram:')
-    st.write('---')
     plot_voronoi(X, kmeans, added_points)
     st.session_state.X = X
     st.session_state.kmeans = kmeans
